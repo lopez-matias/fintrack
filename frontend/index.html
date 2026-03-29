@@ -1,191 +1,333 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinTrack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
-    <nav>
-        <div class="nav-brand">💰 FinTrack</div>
-        <div class="nav-links">
-            <button onclick="showSection('dashboard')" class="nav-btn active" id="btn-dashboard">Dashboard</button>
-            <button onclick="showSection('transactions')" class="nav-btn" id="btn-transactions">Transacciones</button>
-            <button onclick="showSection('categories')" class="nav-btn" id="btn-categories">Categorías</button>
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <span class="logo-icon">◈</span>
+                <span class="logo-text">FinTrack</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">‹</button>
         </div>
-    </nav>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" id="btn-home" onclick="showSection('home')">
+                <span class="nav-icon">⌂</span>
+                <span class="nav-label">Inicio</span>
+            </button>
+            <button class="nav-item" id="btn-dashboard" onclick="showSection('dashboard')">
+                <span class="nav-icon">▤</span>
+                <span class="nav-label">Dashboard</span>
+            </button>
+            <button class="nav-item" id="btn-transactions" onclick="showSection('transactions')">
+                <span class="nav-icon">⇄</span>
+                <span class="nav-label">Transacciones</span>
+            </button>
+            <button class="nav-item" id="btn-categories" onclick="showSection('categories')">
+                <span class="nav-icon">◉</span>
+                <span class="nav-label">Categorías</span>
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="theme-icon">◑</span>
+                <span class="nav-label">Tema</span>
+            </button>
+        </div>
+    </aside>
 
-    <main>
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="section">
-            <div class="section-header">
-                <h1>Dashboard</h1>
-                <div class="date-filters">
-                    <select id="filter-month">
-                        <option value="1">Enero</option>
-                        <option value="2">Febrero</option>
-                        <option value="3">Marzo</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Mayo</option>
-                        <option value="6">Junio</option>
-                        <option value="7">Julio</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Septiembre</option>
-                        <option value="10">Octubre</option>
-                        <option value="11">Noviembre</option>
-                        <option value="12">Diciembre</option>
+    <div class="main-wrapper">
+
+        <header class="topbar">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <span class="topbar-title">FinTrack</span>
+            <button class="theme-toggle-mobile" onclick="toggleTheme()">◑</button>
+        </header>
+
+        <main class="main-content">
+
+            <!-- HOME -->
+            <section id="home" class="section animate-in">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Mis cuentas</h1>
+                        <p class="page-subtitle">Resumen de todos tus saldos</p>
+                    </div>
+                    <button onclick="openModal('modal-account')" class="btn-primary">+ Nueva cuenta</button>
+                </div>
+                <div id="accounts-grid" class="accounts-grid"></div>
+                <div class="home-summary">
+                    <div class="home-summary-card">
+                        <span class="stat-label">Total en cuentas</span>
+                        <span class="home-total" id="home-total">$0</span>
+                    </div>
+                </div>
+                <div class="page-header" style="margin-top:2rem">
+                    <h2 class="section-title">Últimos movimientos</h2>
+                </div>
+                <div class="table-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Descripción</th>
+                                <th>Categoría</th>
+                                <th>Tipo</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="home-recent-list"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- DASHBOARD -->
+            <section id="dashboard" class="section hidden animate-in">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Dashboard</h1>
+                        <p class="page-subtitle">Análisis de tus finanzas</p>
+                    </div>
+                    <div class="date-filters">
+                        <select id="filter-month" class="select">
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                        <select id="filter-year" class="select"></select>
+                        <button onclick="loadDashboard()" class="btn-primary">Aplicar</button>
+                    </div>
+                </div>
+                <div class="cards-grid">
+                    <div class="stat-card income-card">
+                        <div class="stat-card-header">
+                            <span class="stat-label">Ingresos</span>
+                            <span class="stat-icon income-icon">↑</span>
+                        </div>
+                        <span class="stat-value" id="total-income">$0</span>
+                        <div class="stat-bar"><div class="stat-bar-fill income-bar" id="income-bar" style="width:0%"></div></div>
+                    </div>
+                    <div class="stat-card expense-card">
+                        <div class="stat-card-header">
+                            <span class="stat-label">Gastos</span>
+                            <span class="stat-icon expense-icon">↓</span>
+                        </div>
+                        <span class="stat-value" id="total-expense">$0</span>
+                        <div class="stat-bar"><div class="stat-bar-fill expense-bar" id="expense-bar" style="width:0%"></div></div>
+                    </div>
+                    <div class="stat-card balance-card">
+                        <div class="stat-card-header">
+                            <span class="stat-label">Balance</span>
+                            <span class="stat-icon balance-icon">◎</span>
+                        </div>
+                        <span class="stat-value" id="total-balance">$0</span>
+                        <div class="stat-bar"><div class="stat-bar-fill balance-bar" style="width:100%"></div></div>
+                    </div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3 class="chart-title">Gastos por categoría</h3>
+                        <div class="chart-wrapper"><canvas id="chart-expenses"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3 class="chart-title">Ingresos vs Gastos</h3>
+                        <div class="chart-wrapper"><canvas id="chart-summary"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TRANSACCIONES -->
+            <section id="transactions" class="section hidden animate-in">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Transacciones</h1>
+                        <p class="page-subtitle">Historial de movimientos</p>
+                    </div>
+                    <button onclick="openModal('modal-transaction')" class="btn-primary">+ Nueva</button>
+                </div>
+                <div class="filters-bar">
+                    <select id="tx-filter-type" onchange="loadTransactions()" class="select">
+                        <option value="">Todos los tipos</option>
+                        <option value="income">Ingresos</option>
+                        <option value="expense">Gastos</option>
                     </select>
-                    <select id="filter-year"></select>
-                    <button onclick="loadDashboard()" class="btn-primary">Aplicar</button>
+                    <select id="tx-filter-category" onchange="loadTransactions()" class="select">
+                        <option value="">Todas las categorías</option>
+                    </select>
                 </div>
-            </div>
+                <div class="tx-list" id="transactions-list"></div>
+            </section>
 
-            <div class="cards">
-                <div class="card income">
-                    <span class="card-label">Ingresos</span>
-                    <span class="card-value" id="total-income">$0</span>
+            <!-- CATEGORÍAS -->
+            <section id="categories" class="section hidden animate-in">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Categorías</h1>
+                        <p class="page-subtitle">Organizá tus movimientos</p>
+                    </div>
+                    <button onclick="openModal('modal-category')" class="btn-primary">+ Nueva</button>
                 </div>
-                <div class="card expense">
-                    <span class="card-label">Gastos</span>
-                    <span class="card-value" id="total-expense">$0</span>
-                </div>
-                <div class="card balance">
-                    <span class="card-label">Balance</span>
-                    <span class="card-value" id="total-balance">$0</span>
-                </div>
-            </div>
+                <div id="categories-list" class="categories-grid"></div>
+            </section>
 
-            <div class="charts">
-                <div class="chart-box">
-                    <h3>Gastos por categoría</h3>
-                    <canvas id="chart-expenses"></canvas>
-                </div>
-                <div class="chart-box">
-                    <h3>Ingresos vs Gastos</h3>
-                    <canvas id="chart-summary"></canvas>
-                </div>
-            </div>
-        </section>
+        </main>
+    </div>
+</div>
 
-        <!-- TRANSACCIONES -->
-        <section id="transactions" class="section hidden">
-            <div class="section-header">
-                <h1>Transacciones</h1>
-                <button onclick="openModal('modal-transaction')" class="btn-primary">+ Nueva</button>
-            </div>
-
-            <div class="filters">
-                <select id="tx-filter-type" onchange="loadTransactions()">
-                    <option value="">Todos los tipos</option>
-                    <option value="income">Ingresos</option>
-                    <option value="expense">Gastos</option>
-                </select>
-                <select id="tx-filter-category" onchange="loadTransactions()">
-                    <option value="">Todas las categorías</option>
-                </select>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Descripción</th>
-                        <th>Categoría</th>
-                        <th>Tipo</th>
-                        <th>Monto</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="transactions-list"></tbody>
-            </table>
-        </section>
-
-        <!-- CATEGORÍAS -->
-        <section id="categories" class="section hidden">
-            <div class="section-header">
-                <h1>Categorías</h1>
-                <button onclick="openModal('modal-category')" class="btn-primary">+ Nueva</button>
-            </div>
-            <div id="categories-list" class="categories-grid"></div>
-        </section>
-    </main>
-
-    <!-- MODAL TRANSACCIÓN -->
-    <div id="modal-transaction" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Nueva Transacción</h2>
-                <button onclick="closeModal('modal-transaction')" class="btn-close">✕</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="tx-id">
+<!-- MODAL TRANSACCIÓN -->
+<div id="modal-transaction" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeModal('modal-transaction')"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Nueva Transacción</h2>
+            <button onclick="closeModal('modal-transaction')" class="btn-close">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="tx-id">
+            <div class="form-row">
                 <div class="form-group">
                     <label>Tipo</label>
-                    <select id="tx-type">
+                    <select id="tx-type" class="select" onchange="onTxTypeChange()">
+                        <option value="">Seleccioná un tipo</option>
                         <option value="income">Ingreso</option>
                         <option value="expense">Gasto</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Monto</label>
-                    <input type="number" id="tx-amount" placeholder="0.00" min="0" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <input type="text" id="tx-description" placeholder="Descripción">
-                </div>
-                <div class="form-group">
-                    <label>Categoría</label>
-                    <select id="tx-category"></select>
-                </div>
-                <div class="form-group">
-                    <label>Fecha</label>
-                    <input type="datetime-local" id="tx-date">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeModal('modal-transaction')" class="btn-secondary">Cancelar</button>
-                <button onclick="saveTransaction()" class="btn-primary">Guardar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL CATEGORÍA -->
-    <div id="modal-category" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Nueva Categoría</h2>
-                <button onclick="closeModal('modal-category')" class="btn-close">✕</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="cat-id">
-                <div class="form-group">
-                    <label>Nombre</label>
-                    <input type="text" id="cat-name" placeholder="Nombre de la categoría">
-                </div>
-                <div class="form-group">
-                    <label>Tipo</label>
-                    <select id="cat-type">
-                        <option value="expense">Gasto</option>
-                        <option value="income">Ingreso</option>
+                    <label>Cuenta</label>
+                    <select id="tx-account" class="select">
+                        <option value="">Seleccioná una cuenta</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label>Color</label>
-                    <input type="color" id="cat-color" value="#6366f1">
+                    <span id="tx-account-hint" class="form-hint hidden">⚠ Primero creá una cuenta en Inicio</span>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button onclick="closeModal('modal-category')" class="btn-secondary">Cancelar</button>
-                <button onclick="saveCategory()" class="btn-primary">Guardar</button>
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="tx-category" class="select" onclick="checkTypeSelected()">
+                    <option value="">Primero seleccioná el tipo</option>
+                </select>
+                <span id="tx-category-hint" class="form-hint hidden">⚠ Seleccioná primero el tipo de transacción</span>
+            </div>
+            <div class="form-group">
+                <label>Monto</label>
+                <input type="number" id="tx-amount" placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" id="tx-description" placeholder="Especifica el movimiento">
+            </div>
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="tx-date">
             </div>
         </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('modal-transaction')" class="btn-ghost">Cancelar</button>
+            <button onclick="saveTransaction()" class="btn-primary">Guardar</button>
+        </div>
     </div>
+</div>
 
-    <div id="toast" class="toast hidden"></div>
+<!-- MODAL CATEGORÍA -->
+<div id="modal-category" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeModal('modal-category')"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Nueva Categoría</h2>
+            <button onclick="closeModal('modal-category')" class="btn-close">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="cat-id">
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="cat-name" placeholder="Ej: Alimentación">
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="cat-type" class="select">
+                    <option value="expense">Gasto</option>
+                    <option value="income">Ingreso</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <div class="color-picker-row">
+                    <input type="color" id="cat-color" value="#00c9a7" oninput="syncColorHex(this.value)">
+                    <input type="text" id="cat-color-hex" placeholder="#00c9a7" maxlength="7" oninput="syncColorPicker(this.value)">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('modal-category')" class="btn-ghost">Cancelar</button>
+            <button onclick="saveCategory()" class="btn-primary">Guardar</button>
+        </div>
+    </div>
+</div>
 
-    <script src="js/app.js"></script>
+<!-- MODAL CUENTA -->
+<div id="modal-account" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeModal('modal-account')"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Nueva cuenta</h2>
+            <button onclick="closeModal('modal-account')" class="btn-close">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="acc-id">
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="acc-name" placeholder="Ej: Banco República">
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="acc-type" class="select">
+                    <option value="cash">Efectivo</option>
+                    <option value="card">Tarjeta de débito</option>
+                    <option value="credit">Tarjeta de crédito</option>
+                    <option value="savings">Ahorro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Saldo inicial</label>
+                <input type="number" id="acc-balance" placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <div class="color-picker-row">
+                    <input type="color" id="acc-color" value="#7c6ff7" oninput="syncAccColorHex(this.value)">
+                    <input type="text" id="acc-color-hex" placeholder="#7c6ff7" maxlength="7" oninput="syncAccColorPicker(this.value)">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('modal-account')" class="btn-ghost">Cancelar</button>
+            <button onclick="saveAccount()" class="btn-primary">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<div class="sidebar-overlay hidden" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<script src="js/app.js"></script>
 </body>
 </html>

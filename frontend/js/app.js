@@ -5,7 +5,7 @@ let chartExpenses = null
 let chartSummary = null
 let sidebarCollapsed = false
 let mobileSidebarOpen = false
-
+ 
 // ─── TEMA ─────────────────────────────────────────────
 function toggleTheme() {
     const html = document.documentElement
@@ -15,13 +15,13 @@ function toggleTheme() {
     document.getElementById('theme-icon').textContent = next === 'dark' ? '◑' : '◐'
     updateChartTheme()
 }
-
+ 
 function initTheme() {
     const saved = localStorage.getItem('theme') || 'dark'
     document.documentElement.setAttribute('data-theme', saved)
     document.getElementById('theme-icon').textContent = saved === 'dark' ? '◑' : '◐'
 }
-
+ 
 // ─── SIDEBAR ──────────────────────────────────────────
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar')
@@ -37,7 +37,7 @@ function toggleSidebar() {
         localStorage.setItem('sidebar-collapsed', sidebarCollapsed)
     }
 }
-
+ 
 function initSidebar() {
     const saved = localStorage.getItem('sidebar-collapsed') === 'true'
     if (saved && window.innerWidth > 768) {
@@ -45,7 +45,7 @@ function initSidebar() {
         document.getElementById('sidebar').classList.add('collapsed')
     }
 }
-
+ 
 // ─── NAVEGACIÓN ───────────────────────────────────────
 function showSection(name) {
     document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'))
@@ -61,7 +61,7 @@ function showSection(name) {
     if (name === 'categories')   loadCategories()
     if (window.innerWidth <= 768 && mobileSidebarOpen) toggleSidebar()
 }
-
+ 
 // ─── TOAST ────────────────────────────────────────────
 function showToast(msg, type = 'success') {
     const t = document.getElementById('toast')
@@ -70,13 +70,13 @@ function showToast(msg, type = 'success') {
     clearTimeout(t._timeout)
     t._timeout = setTimeout(() => t.classList.add('hidden'), 3000)
 }
-
+ 
 // ─── MODALES ──────────────────────────────────────────
-function openModal(id) {
+async function openModal(id) {
     if (id === 'modal-transaction') {
         const accSelect = document.getElementById('tx-account')
         const hint = document.getElementById('tx-account-hint')
-        loadAccounts()
+        await loadAccounts()
         accSelect.innerHTML = '<option value="">Seleccioná una cuenta</option>'
         if (accounts.length === 0) {
             hint.classList.remove('hidden')
@@ -93,7 +93,7 @@ function openModal(id) {
     document.getElementById(id).classList.remove('hidden')
     document.body.style.overflow = 'hidden'
 }
-
+ 
 function closeModal(id) {
     document.getElementById(id).classList.add('hidden')
     document.body.style.overflow = ''
@@ -101,7 +101,7 @@ function closeModal(id) {
     if (id === 'modal-category')    resetCategoryForm()
     if (id === 'modal-account')     resetAccountForm()
 }
-
+ 
 function resetTransactionForm() {
     document.getElementById('tx-id').value = ''
     document.getElementById('tx-type').value = ''
@@ -114,7 +114,7 @@ function resetTransactionForm() {
     document.getElementById('tx-category-hint').classList.add('hidden')
     document.querySelector('#modal-transaction .modal-title').textContent = 'Nueva Transacción'
 }
-
+ 
 function resetCategoryForm() {
     document.getElementById('cat-id').value = ''
     document.getElementById('cat-name').value = ''
@@ -123,7 +123,7 @@ function resetCategoryForm() {
     document.getElementById('cat-color-hex').value = '#00c9a7'
     document.querySelector('#modal-category .modal-title').textContent = 'Nueva Categoría'
 }
-
+ 
 function resetAccountForm() {
     document.getElementById('acc-id').value = ''
     document.getElementById('acc-name').value = ''
@@ -133,7 +133,7 @@ function resetAccountForm() {
     document.getElementById('acc-color-hex').value = '#7c6ff7'
     document.querySelector('#modal-account .modal-title').textContent = 'Nueva cuenta'
 }
-
+ 
 // ─── COLOR PICKERS ────────────────────────────────────
 function syncColorHex(val) {
     document.getElementById('cat-color-hex').value = val
@@ -149,7 +149,7 @@ function syncAccColorPicker(val) {
     if (/^#[0-9A-Fa-f]{6}$/.test(val))
         document.getElementById('acc-color').value = val
 }
-
+ 
 // ─── TIPO → CATEGORÍAS ────────────────────────────────
 function onTxTypeChange() {
     const type = document.getElementById('tx-type').value
@@ -169,77 +169,93 @@ function onTxTypeChange() {
         catSelect.appendChild(opt)
     })
 }
-
+ 
 function checkTypeSelected() {
     const type = document.getElementById('tx-type').value
     if (!type) document.getElementById('tx-category-hint').classList.remove('hidden')
 }
-
+ 
 // ─── CUENTAS ──────────────────────────────────────────
-function loadAccounts() {
-    accounts = JSON.parse(localStorage.getItem('fintrack-accounts') || '[]')
+async function loadAccounts() {
+    const res = await fetch(`${API}/accounts/`)
+    accounts = await res.json()
 }
-
-function saveAccounts() {
-    localStorage.setItem('fintrack-accounts', JSON.stringify(accounts))
-}
-
-function saveAccount() {
+ 
+async function saveAccount() {
     const id = document.getElementById('acc-id').value
     const name = document.getElementById('acc-name').value.trim()
     const type = document.getElementById('acc-type').value
-    const balance = parseFloat(document.getElementById('acc-balance').value)
+    const initial_balance = parseFloat(document.getElementById('acc-balance').value)
     const hexInput = document.getElementById('acc-color-hex').value
     const color = /^#[0-9A-Fa-f]{6}$/.test(hexInput)
         ? hexInput
         : document.getElementById('acc-color').value
-
+ 
     if (!name) return showToast('El nombre es obligatorio', 'error')
     if (isNaN(balance)) return showToast('Ingresá un saldo válido', 'error')
-
+    if (isNaN(initial_balance)) return showToast('Ingresá un saldo válido', 'error')
+ 
+    const body = { name, type, initial_balance, color }
+    const url = id ? `${API}/accounts/${id}` : `${API}/accounts/`
+    const method = id ? 'PUT' : 'POST'
+ 
+    const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    })
+ 
     if (id) {
         const idx = accounts.findIndex(a => a.id === parseInt(id))
         if (idx !== -1) accounts[idx] = { ...accounts[idx], name, type, balance, color }
+    if (res.ok) {
+        showToast(id ? 'Cuenta actualizada' : 'Cuenta creada')
+        closeModal('modal-account')
+        await loadHome()
     } else {
         accounts.push({ id: Date.now(), name, type, balance, color })
+        const err = await res.json()
+        showToast(err.detail || 'Error al guardar', 'error')
     }
-
+ 
     saveAccounts()
     showToast(id ? 'Cuenta actualizada' : 'Cuenta creada')
     closeModal('modal-account')
     renderAccounts()
 }
-
+ 
 function editAccount(id) {
-    const acc = accounts.find(a => a.id === id)
-    if (!acc) return
+
+Expandir 2 líneas ocultas
     document.getElementById('acc-id').value = acc.id
     document.getElementById('acc-name').value = acc.name
     document.getElementById('acc-type').value = acc.type
     document.getElementById('acc-balance').value = acc.balance
+    // Mostramos el saldo inicial, no el calculado
+    document.getElementById('acc-balance').value = acc.initial_balance
     document.getElementById('acc-color').value = acc.color
     document.getElementById('acc-color-hex').value = acc.color
     document.querySelector('#modal-account .modal-title').textContent = 'Editar cuenta'
     openModal('modal-account')
 }
-
+ 
 function deleteAccount(id) {
+async function deleteAccount(id) {
     if (!confirm('¿Eliminar esta cuenta?')) return
     accounts = accounts.filter(a => a.id !== id)
     saveAccounts()
     showToast('Cuenta eliminada')
     renderAccounts()
+    const res = await fetch(`${API}/accounts/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+        showToast('Cuenta eliminada')
+        await loadHome()
+    } else {
+        showToast('Error al eliminar', 'error')
+    }
 }
-
+ 
 const accountTypeLabel = {
-    cash: 'Efectivo', card: 'Débito', credit: 'Crédito', savings: 'Ahorro'
-}
-
-function renderAccounts() {
-    const grid = document.getElementById('accounts-grid')
-    if (accounts.length === 0) {
-        grid.innerHTML = `<div style="color:var(--text-2);font-size:0.875rem;padding:0.5rem">
-            No tenés cuentas. ¡Creá una!
         </div>`
         document.getElementById('home-total').textContent = '$0'
         return
@@ -260,7 +276,7 @@ function renderAccounts() {
         </div>
     `).join('')
 }
-
+ 
 // ─── HOME ─────────────────────────────────────────────
 async function loadHome() {
     loadAccounts()
@@ -268,13 +284,14 @@ async function loadHome() {
     const res = await fetch(`${API}/transactions/?limit=8`)
     const txs = await res.json()
     const list = document.getElementById('home-recent-list')
-    if (txs.length === 0) {
-        list.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-2);padding:2rem;font-size:0.875rem">
-            Sin movimientos recientes
-        </td></tr>`
-        return
-    }
-    list.innerHTML = txs.map(t => {
+ 
+// ─── HOME ─────────────────────────────────────────────
+async function loadHome() {
+    loadAccounts()
+    await loadAccounts()
+    renderAccounts()
+    const res = await fetch(`${API}/transactions/?limit=8`)
+    const txs = await res.json()
         const date = new Date(t.date).toLocaleDateString('es-UY', { day: '2-digit', month: 'short' })
         const sign = t.type === 'income' ? '+' : '-'
         return `<tr>
@@ -291,7 +308,7 @@ async function loadHome() {
         </tr>`
     }).join('')
 }
-
+ 
 // ─── CATEGORÍAS ───────────────────────────────────────
 async function loadCategories() {
     const res = await fetch(`${API}/categories/`)
@@ -318,7 +335,7 @@ async function loadCategories() {
     `).join('')
     updateFilterCategorySelect()
 }
-
+ 
 function updateFilterCategorySelect() {
     const el = document.getElementById('tx-filter-category')
     if (!el) return
@@ -332,7 +349,7 @@ function updateFilterCategorySelect() {
     })
     if (current) el.value = current
 }
-
+ 
 async function saveCategory() {
     const id = document.getElementById('cat-id').value
     const hexInput = document.getElementById('cat-color-hex').value
@@ -361,7 +378,7 @@ async function saveCategory() {
         showToast(err.detail || 'Error al guardar', 'error')
     }
 }
-
+ 
 async function editCategory(id) {
     const cat = categories.find(c => c.id === id)
     if (!cat) return
@@ -373,7 +390,7 @@ async function editCategory(id) {
     document.querySelector('#modal-category .modal-title').textContent = 'Editar Categoría'
     openModal('modal-category')
 }
-
+ 
 async function deleteCategory(id) {
     if (!confirm('¿Eliminar esta categoría?')) return
     const res = await fetch(`${API}/categories/${id}`, { method: 'DELETE' })
@@ -384,7 +401,7 @@ async function deleteCategory(id) {
         showToast('Error al eliminar', 'error')
     }
 }
-
+ 
 // ─── TRANSACCIONES ────────────────────────────────────
 async function loadTransactions() {
     const type = document.getElementById('tx-filter-type').value
@@ -411,35 +428,35 @@ async function loadTransactions() {
             <span class="tx-dot" style="background:${t.category.color}"></span>
             <div class="tx-info">
                 <div class="tx-desc">${t.description || '—'}</div>
-                <div class="tx-meta">
-                    <span>${date}</span>
-                    <span>·</span>
-                    <span>${t.category.name}</span>
-                    <span>·</span>
-                    <span class="badge badge-${t.type}">${t.type === 'income' ? 'Ingreso' : 'Gasto'}</span>
-                </div>
-            </div>
+            day: '2-digit', month: 'short', year: 'numeric'
+        })
+        const sign = t.type === 'income' ? '+' : '-'
+        const acc = accounts.find(a => a.id === t.account_id)
+        const accLabel = acc ? `<span>·</span><span>${acc.name}</span>` : ''
+        return `
+        <div class="tx-item">
+            <span class="tx-dot" style="background:${t.category.color}"></span>
             <span class="tx-amount amount-${t.type}">${sign}$${t.amount.toLocaleString('es-UY')}</span>
             <div class="tx-actions">
                 <button class="btn-edit" onclick="editTransaction(${t.id})">Editar</button>
-                <button class="btn-danger" onclick="deleteTransaction(${t.id})">Eliminar</button>
-            </div>
-        </div>`
-    }).join('')
-}
-
-async function saveTransaction() {
+                    <span>${date}</span>
+                    <span>·</span>
+                    <span>${t.category.name}</span>
+                    ${accLabel}
+                    <span>·</span>
+                    <span class="badge badge-${t.type}">${t.type === 'income' ? 'Ingreso' : 'Gasto'}</span>
+                </div>
     const id = document.getElementById('tx-id').value
     const type = document.getElementById('tx-type').value
     const amount = parseFloat(document.getElementById('tx-amount').value)
     const category_id = parseInt(document.getElementById('tx-category').value)
     const account_id = document.getElementById('tx-account').value
-
+ 
     if (!type)              return showToast('Seleccioná el tipo de transacción', 'error')
     if (!account_id)        return showToast('Seleccioná una cuenta', 'error')
     if (!category_id)       return showToast('Seleccioná una categoría', 'error')
     if (!amount || amount <= 0) return showToast('Ingresá un monto válido', 'error')
-
+ 
     const dateVal = document.getElementById('tx-date').value
     const body = {
         type,
@@ -449,7 +466,7 @@ async function saveTransaction() {
         account_id: parseInt(account_id),
         date: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
     }
-
+ 
     const url = id ? `${API}/transactions/${id}` : `${API}/transactions/`
     const method = id ? 'PUT' : 'POST'
     const res = await fetch(url, {
@@ -466,55 +483,56 @@ async function saveTransaction() {
         showToast(err.detail || 'Error al guardar', 'error')
     }
 }
-
+ 
 async function editTransaction(id) {
-    const res = await fetch(`${API}/transactions/${id}`)
-    const t = await res.json()
-    document.getElementById('tx-id').value = t.id
-    document.getElementById('tx-type').value = t.type
-    onTxTypeChange()
-    document.getElementById('tx-amount').value = t.amount
-    document.getElementById('tx-description').value = t.description || ''
-    document.getElementById('tx-date').value = t.date.slice(0, 10)
+    if (res.ok) {
+        showToast(id ? 'Transacción actualizada' : 'Transacción creada')
+        closeModal('modal-transaction')
+        // Recargamos cuentas para reflejar el balance actualizado
+        await loadAccounts()
+        loadTransactions()
+    } else {
+        const err = await res.json()
     await new Promise(r => setTimeout(r, 50))
     document.getElementById('tx-category').value = t.category_id
     document.querySelector('#modal-transaction .modal-title').textContent = 'Editar Transacción'
     openModal('modal-transaction')
     document.getElementById('tx-account').value = t.account_id || ''
 }
-
+ 
 async function deleteTransaction(id) {
     if (!confirm('¿Eliminar esta transacción?')) return
     const res = await fetch(`${API}/transactions/${id}`, { method: 'DELETE' })
     if (res.ok) {
         showToast('Transacción eliminada')
         loadTransactions()
-    } else {
-        showToast('Error al eliminar', 'error')
-    }
+    await new Promise(r => setTimeout(r, 50))
+    document.getElementById('tx-category').value = t.category_id
+    document.querySelector('#modal-transaction .modal-title').textContent = 'Editar Transacción'
+    openModal('modal-transaction')
+    await openModal('modal-transaction')
+    document.getElementById('tx-account').value = t.account_id || ''
 }
-
-// ─── DASHBOARD ────────────────────────────────────────
-async function loadDashboard() {
+ 
     const month = document.getElementById('filter-month').value
     const year  = document.getElementById('filter-year').value
-    const res   = await fetch(`${API}/transactions/summary?month=${month}&year=${year}`)
-    const data  = await res.json()
-
-    document.getElementById('total-income').textContent  = `$${data.total_income.toLocaleString('es-UY')}`
-    document.getElementById('total-expense').textContent = `$${data.total_expense.toLocaleString('es-UY')}`
-
-    const balEl = document.getElementById('total-balance')
-    balEl.textContent = `$${Math.abs(data.balance).toLocaleString('es-UY')}`
+    const res = await fetch(`${API}/transactions/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+        showToast('Transacción eliminada')
+        // Recargamos cuentas para reflejar el balance actualizado
+        await loadAccounts()
+        loadTransactions()
+    } else {
+        showToast('Error al eliminar', 'error')
     balEl.style.color = data.balance >= 0 ? 'var(--income)' : 'var(--expense)'
-
+ 
     const max = Math.max(data.total_income, data.total_expense) || 1
     document.getElementById('income-bar').style.width  = `${(data.total_income / max) * 100}%`
     document.getElementById('expense-bar').style.width = `${(data.total_expense / max) * 100}%`
-
+ 
     renderCharts(data)
 }
-
+ 
 function getChartColors() {
     const dark = document.documentElement.getAttribute('data-theme') === 'dark'
     return {
@@ -524,11 +542,11 @@ function getChartColors() {
         expense: dark ? '#ff6b6b' : '#e84545',
     }
 }
-
+ 
 function renderCharts(data) {
     const c = getChartColors()
     const expCats = Object.entries(data.by_category).filter(([, v]) => v.expense > 0)
-
+ 
     if (chartExpenses) chartExpenses.destroy()
     chartExpenses = expCats.length === 0 ? null : new Chart(document.getElementById('chart-expenses'), {
         type: 'doughnut',
@@ -551,7 +569,7 @@ function renderCharts(data) {
             }
         }
     })
-
+ 
     if (chartSummary) chartSummary.destroy()
     chartSummary = new Chart(document.getElementById('chart-summary'), {
         type: 'bar',
@@ -571,16 +589,16 @@ function renderCharts(data) {
         }
     })
 }
-
+ 
 function updateChartTheme() {
     if (!document.getElementById('dashboard').classList.contains('hidden')) loadDashboard()
 }
-
+ 
 // ─── INIT ─────────────────────────────────────────────
 function init() {
     initTheme()
     initSidebar()
-
+ 
     const now = new Date()
     const yearSelect = document.getElementById('filter-year')
     for (let y = now.getFullYear(); y >= now.getFullYear() - 3; y--) {
@@ -590,7 +608,7 @@ function init() {
         yearSelect.appendChild(opt)
     }
     document.getElementById('filter-month').value = now.getMonth() + 1
-
+ 
     window.addEventListener('resize', () => {
         if (window.innerWidth > 768 && mobileSidebarOpen) {
             document.getElementById('sidebar').classList.remove('mobile-open')
@@ -598,8 +616,13 @@ function init() {
             mobileSidebarOpen = false
         }
     })
-
+ 
     loadCategories().then(() => loadHome())
 }
-
+ 
+init()
+    loadCategories().then(() => loadHome())
+}
+ 
+init()
 init()

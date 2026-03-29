@@ -38,6 +38,10 @@ def update_category(category_id: int, category: CategoryUpdate, db: Session = De
 
 @router.delete("/{category_id}", status_code=204)
 def delete_category(category_id: int, db: Session = Depends(get_db)):
-    db_category = transaction_service.delete_category(db, category_id)
-    if not db_category:
-        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    from sqlalchemy.exc import IntegrityError
+    try:
+        db_category = transaction_service.delete_category(db, category_id)
+        if not db_category:
+            raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="No podés eliminar una categoría que tiene transacciones asociadas")

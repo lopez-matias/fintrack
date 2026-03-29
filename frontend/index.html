@@ -38,6 +38,10 @@
                 <span class="nav-icon">◉</span>
                 <span class="nav-label">Categorías</span>
             </button>
+            <button class="nav-item" id="btn-profile" onclick="showSection('profile')">
+                <span class="nav-icon">◎</span>
+                <span class="nav-label">Mi perfil</span>
+            </button>
         </nav>
         <div class="sidebar-footer">
             <button class="theme-toggle" onclick="toggleTheme()">
@@ -190,6 +194,80 @@
                 <div id="categories-list" class="categories-grid"></div>
             </section>
 
+            <!-- PERFIL -->
+            <section id="profile" class="section hidden animate-in">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Mi perfil</h1>
+                        <p class="page-subtitle">Administrá tu cuenta</p>
+                    </div>
+                </div>
+
+                <div class="profile-grid">
+
+                    <!-- Info personal -->
+                    <div class="profile-card">
+                        <h3 class="profile-card-title">Información personal</h3>
+                        <div id="profile-info">
+                            <div class="profile-avatar" id="profile-avatar">M</div>
+                            <div class="profile-meta">
+                                <div class="profile-name" id="profile-name">—</div>
+                                <div class="profile-email" id="profile-email">—</div>
+                                <div class="profile-since" id="profile-since">—</div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:1.25rem">
+                            <label>Nombre</label>
+                            <input type="text" id="edit-name" placeholder="Tu nombre">
+                        </div>
+                        <div class="form-group" style="margin-top:1rem">
+                            <label>Email</label>
+                            <input type="text" id="edit-email" placeholder="tu@email.com">
+                        </div>
+                        <button onclick="saveProfile()" class="btn-primary" style="margin-top:1rem;width:100%">
+                            Guardar cambios
+                        </button>
+                    </div>
+
+                    <!-- Cambiar contraseña -->
+                    <div class="profile-card">
+                        <h3 class="profile-card-title">Cambiar contraseña</h3>
+                        <div class="form-group">
+                            <label>Contraseña actual</label>
+                            <input type="password" id="current-password" placeholder="••••••••">
+                        </div>
+                        <div class="form-group" style="margin-top:1rem">
+                            <label>Nueva contraseña</label>
+                            <input type="password" id="new-password" placeholder="Mínimo 6 caracteres">
+                        </div>
+                        <div class="form-group" style="margin-top:1rem">
+                            <label>Confirmar nueva contraseña</label>
+                            <input type="password" id="confirm-password" placeholder="Repetí la nueva contraseña">
+                        </div>
+                        <button onclick="changePassword()" class="btn-primary" style="margin-top:1rem;width:100%">
+                            Cambiar contraseña
+                        </button>
+                    </div>
+
+                    <!-- Sesión y cuenta -->
+                    <div class="profile-card danger-zone">
+                        <h3 class="profile-card-title">Sesión</h3>
+                        <p class="profile-card-desc">Al cerrar sesión vas a tener que volver a iniciarla para acceder a tu cuenta.</p>
+                        <button onclick="logout()" class="btn-ghost" style="width:100%;margin-top:1rem">
+                            Cerrar sesión
+                        </button>
+                    </div>
+
+                    <div class="profile-card danger-zone">
+                        <h3 class="profile-card-title" style="color:var(--expense)">Eliminacion de cuenta</h3>
+                        <p class="profile-card-desc">Esta acción es irreversible. Se eliminarán todos tus datos permanentemente.</p>
+                        <button onclick="deleteAccount()" class="btn-danger" style="width:100%;margin-top:1rem;padding:0.55rem">
+                            Eliminar mi cuenta
+                        </button>
+                    </div>
+
+                </div>
+            </section>
         </main>
     </div>
 </div>

@@ -6,6 +6,36 @@ let chartSummary = null
 let sidebarCollapsed = false
 let mobileSidebarOpen = false
 
+
+// ─── AUTH ─────────────────────────────────────────────
+function getToken() {
+    return localStorage.getItem('fintrack-token')
+}
+
+function getUser() {
+    const u = localStorage.getItem('fintrack-user')
+    return u ? JSON.parse(u) : null
+}
+
+function logout() {
+    localStorage.removeItem('fintrack-token')
+    localStorage.removeItem('fintrack-user')
+    window.location.href = '/login.html'
+}
+
+function authHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+    }
+}
+
+function checkAuth() {
+    if (!getToken()) {
+        window.location.href = '/login.html'
+    }
+}
+
 // ─── TEMA ─────────────────────────────────────────────
 function toggleTheme() {
     const html = document.documentElement
@@ -59,6 +89,7 @@ function showSection(name) {
     if (name === 'dashboard')    loadDashboard()
     if (name === 'transactions') loadTransactions()
     if (name === 'categories')   loadCategories()
+    if (name === 'profile') loadProfile()
     if (window.innerWidth <= 768 && mobileSidebarOpen) toggleSidebar()
 }
 
@@ -613,10 +644,141 @@ function updateChartTheme() {
     if (!document.getElementById('dashboard').classList.contains('hidden')) loadDashboard()
 }
 
+// ─── PERFIL ───────────────────────────────────────────
+async function loadProfile() {
+    const user = getUser()
+    if (!user) return
+
+    document.getElementById('profile-avatar').textContent = user.name.charAt(0).toUpperCase()
+    document.getElementById('profile-name').textContent = user.name
+    document.getElementById('profile-email').textContent = user.email
+    document.getElementById('profile-since').textContent = `Miembro desde ${new Date(user.created_at).toLocaleDateString('es-UY', { year: 'numeric', month: 'long' })}`
+    document.getElementById('edit-name').value = user.name
+    document.getElementById('edit-email').value = user.email
+}
+
+async function saveProfile() {
+    const name = document.getElementById('edit-name').value.trim()
+    const email = document.getElementById('edit-email').value.trim()
+
+    if (!name || !email) return showToast('Completá todos los campos', 'error')
+
+    const res = await fetch(`${API}/auth/me`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ name, email })
+    })
+
+    if (res.ok) {
+        const updated = await res.json()
+        localStorage.setItem('fintrack-user', JSON.stringify(updated))
+        showToast('Perfil actualizado')
+        loadProfile()
+        updateSidebarUser()
+    } else {
+        const err = await res.json()
+        showToast(err.detail || 'Error al guardar', 'error')
+    }
+}
+
+async function changePassword() {
+    const current = document.getElementById('current-password').value
+    const newPass = document.getElementById('new-password').value
+    const confirm = document.getElementById('confirm-password').value
+
+    if (!current || !newPass || !confirm) return showToast('Completá todos los campos', 'error')
+    if (newPass !== confirm) return showToast('Las contraseñas no coinciden', 'error')
+    if (newPass.length < 6) return showToast('Mínimo 6 caracteres', 'error')
+
+    const res = await fetch(`${API}/auth/me/password`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ current_password: current, new_password: newPass })
+    })
+
+    if (res.ok) {
+        showToast('Contraseña actualizada')
+        document.getElementById('current-password').value = ''
+        document.getElementById('new-password').value = ''
+        document.getElementById('confirm-password').value = ''
+    } else {
+        const err = await res.json()
+        showToast(err.detail || 'Error al cambiar contraseña', 'error')
+    }
+}
+
+async function deleteAccount() {
+    if (!confirm('¿Estás seguro? Esta acción es irreversible y eliminará todos tus datos.')) return
+    if (!confirm('Última confirmación — ¿eliminar cuenta definitivamente?')) return
+
+    const res = await fetch(`${API}/auth/me`, {
+        method: 'DELETE',
+        headers: authHeaders()
+    })
+
+    if (res.ok) {
+        showToast('Cuenta eliminada')
+        logout()
+    } else {
+        showToast('Error al eliminar la cuenta', 'error')
+    }
+}
+
+function updateSidebarUser() {
+    const user = getUser()
+    if (!user) return
+    const nameEl = document.querySelector('.sidebar-user-name')
+    const emailEl = document.querySelector('.sidebar-user-email')
+    const avatarEl = document.querySelector('.sidebar-user-avatar')
+    if (nameEl) nameEl.textContent = user.name
+    if (emailEl) emailEl.textContent = user.email
+    if (avatarEl) avatarEl.textContent = user.name.charAt(0).toUpperCase()
+}
+
 // ─── INIT ─────────────────────────────────────────────
 function init() {
+    checkAuth()
     initTheme()
     initSidebar()
+
+    const user = getUser()
+    if (user) {
+        const footer = document.querySelector('.sidebar-footer')
+        footer.innerHTML = `
+            <div style="padding:0.65rem 0.75rem;display:flex;flex-direction:column;gap:0.5rem">
+                <div style="display:flex;align-items:center;gap:0.6rem;overflow:hidden">
+                    <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-dim);
+                        color:var(--accent);display:flex;align-items:center;justify-content:center;
+                        font-size:0.75rem;font-weight:600;flex-shrink:0">
+                        ${user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="nav-label" style="min-width:0">
+                        <div style="font-size:0.85rem;font-weight:500;color:var(--text-1);
+                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                            ${user.name}
+                        </div>
+                        <div style="font-size:0.72rem;color:var(--text-2);
+                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                            ${user.email}
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.4rem">
+                    <button class="theme-toggle" onclick="toggleTheme()" style="flex:1;padding:0.4rem">
+                        <span id="theme-icon">◑</span>
+                        <span class="nav-label">Tema</span>
+                    </button>
+                    <button onclick="logout()" style="background:transparent;border:1px solid var(--border);
+                        color:var(--text-2);padding:0.4rem 0.6rem;border-radius:var(--radius-sm);
+                        cursor:pointer;font-size:0.75rem;transition:all var(--transition)"
+                        onmouseover="this.style.background='var(--expense-dim)';this.style.color='var(--expense)'"
+                        onmouseout="this.style.background='transparent';this.style.color='var(--text-2)'">
+                        Salir
+                    </button>
+                </div>
+            </div>
+        `
+    }
 
     const now = new Date()
     const yearSelect = document.getElementById('filter-year')
@@ -639,4 +801,3 @@ function init() {
     loadCategories().then(() => loadHome())
 }
 
-init()

@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -25,7 +26,7 @@ from backend.routers import transactions, categories
 app.include_router(categories.router, prefix="/api")
 app.include_router(transactions.router, prefix="/api")
 
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+app.mount("/", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "..", "frontend"), html=True), name="frontend")
 
 @app.get("/api/health")
 def health_check():

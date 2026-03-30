@@ -1010,3 +1010,82 @@ input[type="color"] {
 @media (max-width: 768px) {
     .profile-grid { grid-template-columns: 1fr; }
 }
+
+/* ── RESPONSIVE FIXES ─────────────────────────────────── */
+@media (max-width: 900px) {
+    .home-summary-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .accounts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 1rem;
+    }
+
+    .page-title { font-size: 1.3rem; }
+
+    .stat-value { font-size: 1.3rem; }
+
+    .home-total { font-size: 1.5rem; }
+
+    .chart-wrapper { height: 160px; }
+
+    .accounts-grid { grid-template-columns: 1fr; }
+
+    .home-summary-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .date-filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    .date-filters .btn-primary {
+        grid-column: 1 / -1;
+    }
+
+    .tx-item {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tx-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .profile-grid { grid-template-columns: 1fr; }
+
+    .filters-bar {
+        flex-direction: column;
+    }
+
+    .filters-bar .select,
+    .filters-bar input {
+        max-width: 100% !important;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-value { font-size: 1.2rem; }
+
+    .account-balance { font-size: 1.1rem; }
+
+    .modal-content { margin: 0.5rem; }
+
+    .table-card { border-radius: var(--radius-sm); }
+
+    th, td { padding: 0.6rem 0.75rem; }
+}

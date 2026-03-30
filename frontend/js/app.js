@@ -263,14 +263,15 @@ async function editAccount(id) {
     await openModal('modal-account')
 }
 
-async function deleteAccount(id) {
-    if (!confirm('¿Eliminar esta cuenta?')) return
-    const res = await fetch(`${API}/accounts/${id}`, { method: 'DELETE' })
+async function deleteWallet(id) {
+    if (!confirm('¿Eliminar esta billetera?')) return
+    const res = await fetch(`${API}/accounts/${id}`, { method: 'DELETE', headers: authHeaders() })
     if (res.ok) {
-        showToast('Cuenta eliminada')
+        showToast('Biletera eliminada')
         await loadHome()
     } else {
-        showToast('Error al eliminar', 'error')
+        const err = await res.json()
+        showToast(err.detail || 'Error al eliminar', 'error')
     }
 }
 
@@ -297,8 +298,8 @@ function renderAccounts() {
                 $${a.balance.toLocaleString('es-UY')}
             </span>
             <div class="account-actions">
-                <button class="btn-edit" onclick="editAccount(${a.id})">Editar</button>
-                <button class="btn-danger" onclick="deleteAccount(${a.id})">Eliminar</button>
+                <button class="btn-edit" onclick="editWallet(${a.id})">Editar</button>
+                <button class="btn-danger" onclick="deleteWallet(${a.id})">Eliminar</button>
             </div>
         </div>
     `).join('')
@@ -372,6 +373,39 @@ async function loadCategories() {
     updateFilterCategorySelect()
 }
 
+function filterCategories() {
+    const type = document.getElementById('cat-filter-type').value
+    const search = document.getElementById('cat-filter-search').value.toLowerCase()
+
+    const filtered = categories.filter(c => {
+        const matchType = !type || c.type === type
+        const matchSearch = !search || c.name.toLowerCase().includes(search)
+        return matchType && matchSearch
+    })
+
+    const list = document.getElementById('categories-list')
+    if (filtered.length === 0) {
+        list.innerHTML = `<div style="color:var(--text-2);font-size:0.875rem;padding:0.5rem">
+            No se encontraron categorías
+        </div>`
+        return
+    }
+
+    list.innerHTML = filtered.map(c => `
+        <div class="category-card">
+            <div style="display:flex;align-items:center;gap:0.5rem">
+                <span class="category-dot" style="background:${c.color}"></span>
+                <span class="category-name">${c.name}</span>
+            </div>
+            <span class="category-type">${c.type === 'income' ? '↑ Ingreso' : '↓ Gasto'}</span>
+            <div class="category-actions">
+                <button class="btn-edit" onclick="editCategory(${c.id})">Editar</button>
+                <button class="btn-danger" onclick="deleteCategory(${c.id})">Eliminar</button>
+            </div>
+        </div>
+    `).join('')
+}
+
 function updateFilterCategorySelect() {
     const el = document.getElementById('tx-filter-category')
     if (!el) return
@@ -431,12 +465,13 @@ async function editCategory(id) {
 
 async function deleteCategory(id) {
     if (!confirm('¿Eliminar esta categoría?')) return
-    const res = await fetch(`${API}/categories/${id}`, { method: 'DELETE' })
+    const res = await fetch(`${API}/categories/${id}`, { method: 'DELETE', headers: authHeaders() })
     if (res.ok) {
         showToast('Categoría eliminada')
         loadCategories()
     } else {
-        showToast('Error al eliminar', 'error')
+        const err = await res.json()
+        showToast(err.detail || 'Error al eliminar', 'error')
     }
 }
 

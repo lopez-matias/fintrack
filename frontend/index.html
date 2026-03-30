@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinTrack</title>
+    <title>Caudal</title>
+    <link rel="icon" type="image/png" href="https://img.icons8.com/skeuomorphism/32/idea.png"/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
@@ -16,8 +17,7 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="logo">
-                <span class="logo-icon">◈</span>
-                <span class="logo-text">FinTrack</span>
+                <span class="logo-text">Caudal</span>
             </div>
             <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">‹</button>
         </div>
@@ -55,7 +55,7 @@
 
         <header class="topbar">
             <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-            <span class="topbar-title">FinTrack</span>
+            <span class="topbar-title">Caudal</span>
             <button class="theme-toggle-mobile" onclick="toggleTheme()">◑</button>
         </header>
 
@@ -190,6 +190,15 @@
                         <p class="page-subtitle">Organizá tus movimientos</p>
                     </div>
                     <button onclick="openModal('modal-category')" class="btn-primary">+ Nueva</button>
+                </div>
+                <div class="filters-bar">
+                    <select id="cat-filter-type" onchange="filterCategories()" class="select" style="max-width:200px">
+                        <option value="">Todos los tipos</option>
+                        <option value="income">Ingresos</option>
+                        <option value="expense">Gastos</option>
+                    </select>
+                    <input type="text" id="cat-filter-search" placeholder="Buscar categoría..."
+                        oninput="filterCategories()" style="max-width:220px">
                 </div>
                 <div id="categories-list" class="categories-grid"></div>
             </section>

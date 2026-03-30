@@ -36,6 +36,16 @@ def update_account(account_id: int, account: AccountUpdate, db: Session = Depend
  
 @router.delete("/{account_id}", status_code=204)
 def delete_account(account_id: int, db: Session = Depends(get_db)):
+    from backend.models.transaction import Transaction
+    account = account_service.get_account(db, account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Cuenta no encontrada")
+    tx_count = db.query(Transaction).filter(Transaction.account_id == account_id).count()
+    if tx_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No podés eliminar esta cuenta porque tiene {tx_count} transacción/es asociada/s"
+        )
     deleted = account_service.delete_account(db, account_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Cuenta no encontrada")
